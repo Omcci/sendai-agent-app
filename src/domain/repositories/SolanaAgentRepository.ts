@@ -5,21 +5,7 @@ import { Transaction } from "@/domain/entities/Transaction";
 import { Token } from "@/domain/entities/Token";
 
 export class SolanaAgentRepository implements IAgentRepository {
-  private agent: SolanaAgentKit;
-
-  constructor(config: {
-    privateKey: string;
-    rpcUrl?: string;
-    openAiKey?: string;
-  }) {
-    this.agent = new SolanaAgentKit(
-      config.privateKey,
-      config.rpcUrl || "https://api.mainnet-beta.solana.com",
-      {
-        OPENAI_API_KEY: config.openAiKey || undefined,
-      }
-    );
-  }
+  constructor(private readonly agent: SolanaAgentKit) {}
 
   async deployToken(params: {
     name: string;
@@ -124,19 +110,5 @@ export class SolanaAgentRepository implements IAgentRepository {
         error: (error as Error).message,
       };
     }
-  }
-
-  async getMarketData() {
-    const [trendingTokens, topGainers, latestPools] = await Promise.all([
-      this.agent.getTrendingTokens(),
-      this.agent.getTopGainersOnCoingecko("24h", "all"),
-      this.agent.getCoingeckoLatestPools(),
-    ]);
-
-    return {
-      trendingTokens,
-      topGainers,
-      latestPools,
-    };
   }
 }

@@ -1,15 +1,26 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useState, useEffect } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { SolanaAgentRepository } from "@/domain/repositories/SolanaAgentRepository";
 import { Transaction } from "@/domain/entities/Transaction";
 import { Token } from "@/domain/entities/Token";
+import { SolanaRepositoryFactory } from "@/domain/repositories/SolanaRepositoryFactory";
+
+interface TokenData {
+  symbol: string;
+  price: number;
+  change24h: number;
+}
+
+interface PoolData {
+  name: string;
+  liquidity: number;
+}
 
 interface MarketData {
-  trendingTokens: any[];
-  topGainers: any[];
-  latestPools: any[];
+  trendingTokens: TokenData[];
+  topGainers: TokenData[];
+  latestPools: PoolData[];
 }
 
 interface AgentContextType {
@@ -28,6 +39,23 @@ const AgentContext = createContext<AgentContextType>({
   fetchMarketData: async () => { },
 });
 
+const dummyData = {
+  trendingTokens: [
+    { symbol: "SOL", price: 101.23, change24h: 5.67 },
+    { symbol: "BONK", price: 0.00001234, change24h: -2.34 },
+    { symbol: "JTO", price: 2.45, change24h: 12.34 }
+  ],
+  topGainers: [
+    { symbol: "JTO", price: 3.45, change24h: 12.34 },
+    { symbol: "SOL", price: 101.23, change24h: 5.67 },
+    { symbol: "RAY", price: 0.89, change24h: 4.56 }
+  ],
+  latestPools: [
+    { name: "SOL-USDC", liquidity: 1000000 },
+    { name: "BONK-SOL", liquidity: 500000 }
+  ]
+};
+
 export function AgentProvider({ children }: { children: React.ReactNode }) {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
@@ -35,16 +63,36 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [repository, setRepository] = useState<any>(null);
+
+  useEffect(() => {
+    console.log("PublicKey changed:", publicKey?.toBase58());
+  }, [publicKey]);
+
+  // useEffect(() => {
+  //   async function initializeRepository() {
+  //     try {
+  //       const { SolanaRepositoryFactory } = await import("@/domain/repositories/SolanaRepositoryFactory");
+  //       const factory = SolanaRepositoryFactory.getInstance();
+  //       factory.initialize({
+  //         privateKey: "dummy-key",
+  //         rpcUrl: "https://api.mainnet-beta.solana.com",
+  //       });
+  //       const marketDataRepo = factory.createMarketDataRepository();
+  //       setRepository(marketDataRepo);
+  //     } catch (error) {
+  //       console.error("Failed to initialize repository:", error);
+  //     }
+  //   }
+
+  //   initializeRepository();
+  // }, []);
+
 
   const fetchMarketData = useCallback(async () => {
     try {
       setIsLoading(true);
-      // For now, just set dummy data
-      setMarketData({
-        trendingTokens: [],
-        topGainers: [],
-        latestPools: [],
-      });
+      setMarketData(dummyData);
     } catch (error) {
       console.error("Failed to fetch market data:", error);
     } finally {
