@@ -1,7 +1,31 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+interface WebpackConfig {
+  resolve: {
+    fallback: {
+      fs: boolean;
+      os: boolean;
+      path: boolean;
+      [key: string]: boolean;
+    };
+  };
+}
+
+interface NextConfig {
+  reactStrictMode: boolean;
+  webpack: (config: WebpackConfig) => WebpackConfig;
+}
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  reactStrictMode: true,
+  webpack: (config: WebpackConfig): WebpackConfig => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      os: false,
+      path: false,
+    };
+    return config;
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
