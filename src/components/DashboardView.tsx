@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect } from 'react';
 import { useAgent } from '@/application/hooks/useAgent';
 import { MarketDataCard } from './MarketDataCard';
